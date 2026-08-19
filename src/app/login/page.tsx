@@ -19,7 +19,7 @@ function LoginForm() {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
   const [authToken, setAuthToken] = useState('');
-  const [authUser, setAuthUser] = useState<{email?: string} | null>(null);
+  const [authUser, setAuthUser] = useState<{email?: string; name?: string; image?: string} | null>(null);
 
   const handleRedirect = (token: string, user: any) => {
     localStorage.setItem('loreder:token', token);
@@ -32,7 +32,8 @@ function LoginForm() {
     const isHttpUrl = callbackUrl.startsWith('http');
     if (isHttpUrl || isCustomScheme) {
       const separator = callbackUrl.includes('?') ? '&' : '?';
-      const finalUrl = `${callbackUrl}${separator}token=${encodeURIComponent(token)}`;
+      const extraParams = user?.name ? `&name=${encodeURIComponent(user.name)}&image=${encodeURIComponent(user.image || '')}` : '';
+      const finalUrl = `${callbackUrl}${separator}token=${encodeURIComponent(token)}${extraParams}`;
       try { window.location.href = finalUrl; } catch {}
       setTimeout(() => { try { window.location.href = finalUrl; } catch {} }, 500);
     } else if (callbackUrl === 'close') {
@@ -132,7 +133,7 @@ function LoginForm() {
             {(callbackUrl.includes('://') && !callbackUrl.startsWith('http')) && (
               <div className="space-y-2">
                 <a
-                  href={`${callbackUrl}${callbackUrl.includes('?') ? '&' : '?'}token=${encodeURIComponent(authToken)}`}
+                  href={`${callbackUrl}${callbackUrl.includes('?') ? '&' : '?'}token=${encodeURIComponent(authToken)}${authUser?.name ? `&name=${encodeURIComponent(authUser.name)}&image=${encodeURIComponent(authUser.image || '')}` : ''}`}
                   className="block w-full bg-teal-500 hover:bg-teal-400 text-zinc-950 font-bold py-2.5 rounded-xl text-xs text-center transition-all shadow-lg shadow-teal-500/20"
                 >
                   ↩ Return to {editorName}
