@@ -10,6 +10,13 @@ export interface ChatCompletionRequest {
   stream?: boolean;
 }
 
+// Healthy free model fallback chain if OpenCode Zen rate limits the primary requested model
+const FREE_MODEL_FALLBACKS: Record<string, string[]> = {
+  'deepseek-v4-flash-free': ['mimo-v2.5-free', 'nemotron-3.5-lightning-free', 'hy3-free', 'laguna-s-2.1-free'],
+  'mimo-v2.5-free': ['deepseek-v4-flash-free', 'nemotron-3.5-lightning-free', 'hy3-free'],
+  'nemotron-3.5-lightning-free': ['deepseek-v4-flash-free', 'mimo-v2.5-free', 'hy3-free']
+};
+
 export class OpenCodeProvider {
   private getProviderConfig() {
     const providers = db.getProviders();
@@ -29,20 +36,20 @@ export class OpenCodeProvider {
 
     let requestedModel = reqBody.model || 'deepseek-v4-flash-free';
     
-    // Clean up internal namespace prefix
     let targetModel = requestedModel.startsWith('opencode/')
       ? requestedModel.replace('opencode/', '')
       : requestedModel;
 
-    // Handle generic 'free-model' or legacy IDs mapping to exact OpenCode Zen model
     if (targetModel === 'free-model' || targetModel === 'deepseek-r1-free' || targetModel === 'deepseek-v3-free') {
       targetModel = 'deepseek-v4-flash-free';
     }
 
-    const payload = {
-      ...reqBody,
-      model: targetModel
-    };
+    // Build candidate list: Primary requested model first, then fallbacks if rate limited
+    const candidates = [targetModel];
+    const fallbacks = FREE_MODEL_FALLBACKS[targetModel] || ['mimo-v2.5-free', 'nemotron-3.5-lightning-free', 'hy3-free'];
+    fallbacks.forEach(f => {
+      if (!candidates.includes(f)) candidates.push(f);
+    });
 
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
@@ -54,162 +61,159 @@ export class OpenCodeProvider {
       headers['Authorization'] = `Bearer ${apiKey}`;
     }
 
-    if (reqBody.stream) {
-      try {
-        const response = await axios({
-          method: 'post',
-          url: `${baseUrl}/chat/completions`,
-          data: payload,
-          headers,
-          responseType: 'stream',
-          decompress: false,
-          timeout: 60000
-        });
+    let lastError: any = null;
 
-        let totalCompletionLength = 0;
+    for (const modelCandidate of candidates) {
+      const payload = {
+        ...reqBody,
+        model: modelCandidate
+      };
 
-        const stream = new ReadableStream({
-          async start(controller) {
-            response.data.on('data', (chunk: Buffer) => {
-              const chunkStr = chunk.toString();
-              totalCompletionLength += chunkStr.length;
-              controller.enqueue(chunk);
-            });
+      if (reqBody.stream) {
+        try {
+          const response = await axios({
+            method: 'post',
+            url: `${baseUrl}/chat/completions`,
+            data: payload,
+            headers,
+            responseType: 'stream',
+            decompress: false,
+            timeout: 60000
+          });
 
-            response.data.on('end', () => {
-              controller.close();
-              const latencyMs = Date.now() - startTime;
-              const estimatedCompletionTokens = Math.ceil(totalCompletionLength / 4);
-              const promptLength = JSON.stringify(reqBody.messages).length;
-              const estimatedPromptTokens = Math.ceil(promptLength / 4);
+          let totalCompletionLength = 0;
 
-              db.logUsage({
-                keyId,
-                keyName,
-                model: requestedModel,
-                promptTokens: estimatedPromptTokens,
-                completionTokens: estimatedCompletionTokens,
-                totalTokens: estimatedPromptTokens + estimatedCompletionTokens,
-                latencyMs,
-                status: 'success'
+          const stream = new ReadableStream({
+            async start(controller) {
+              response.data.on('data', (chunk: Buffer) => {
+                const chunkStr = chunk.toString();
+                totalCompletionLength += chunkStr.length;
+                controller.enqueue(chunk);
               });
-            });
 
-            response.data.on('error', (err: any) => {
-              console.error('Stream error:', err?.message || err);
-              const errPayload = `data: ${JSON.stringify({ error: { message: err?.message || 'Stream error from OpenCode Zen' } })}\n\n`;
-              controller.enqueue(new TextEncoder().encode(errPayload));
-              controller.close();
+              response.data.on('end', () => {
+                controller.close();
+                const latencyMs = Date.now() - startTime;
+                const estimatedCompletionTokens = Math.ceil(totalCompletionLength / 4);
+                const promptLength = JSON.stringify(reqBody.messages).length;
+                const estimatedPromptTokens = Math.ceil(promptLength / 4);
 
-              db.logUsage({
-                keyId,
-                keyName,
-                model: requestedModel,
-                promptTokens: 0,
-                completionTokens: 0,
-                totalTokens: 0,
-                latencyMs: Date.now() - startTime,
-                status: 'error'
+                db.logUsage({
+                  keyId,
+                  keyName,
+                  model: `opencode/${modelCandidate}`,
+                  promptTokens: estimatedPromptTokens,
+                  completionTokens: estimatedCompletionTokens,
+                  totalTokens: estimatedPromptTokens + estimatedCompletionTokens,
+                  latencyMs,
+                  status: 'success'
+                });
               });
-            });
-          }
-        });
 
-        return new Response(stream, {
-          headers: {
-            'Content-Type': 'text/event-stream',
-            'Cache-Control': 'no-cache',
-            'Connection': 'keep-alive'
-          }
-        });
-      } catch (err: any) {
-        const status = err?.response?.status || 500;
-        const errorData = err?.response?.data;
-        let errorMsg = errorData?.error?.message || err.message || 'Failed to communicate with OpenCode Zen';
+              response.data.on('error', (err: any) => {
+                console.error('Stream error:', err?.message || err);
+                const errPayload = `data: ${JSON.stringify({ error: { message: err?.message || 'Stream error from OpenCode Zen' } })}\n\n`;
+                controller.enqueue(new TextEncoder().encode(errPayload));
+                controller.close();
 
-        if (status === 429) {
-          errorMsg = `OpenCode Zen Rate Limit: The requested model '${targetModel}' is currently rate limited. Please try again in 15-30 seconds.`;
+                db.logUsage({
+                  keyId,
+                  keyName,
+                  model: `opencode/${modelCandidate}`,
+                  promptTokens: 0,
+                  completionTokens: 0,
+                  totalTokens: 0,
+                  latencyMs: Date.now() - startTime,
+                  status: 'error'
+                });
+              });
+            }
+          });
+
+          return new Response(stream, {
+            headers: {
+              'Content-Type': 'text/event-stream',
+              'Cache-Control': 'no-cache',
+              'Connection': 'keep-alive'
+            }
+          });
+        } catch (err: any) {
+          const status = err?.response?.status || 500;
+          lastError = err;
+
+          // If rate limited (429), try next fallback free candidate
+          if (status === 429 && candidates.indexOf(modelCandidate) < candidates.length - 1) {
+            console.warn(`[Loreder Smart Router] '${modelCandidate}' rate limited on OpenCode Zen. Auto-routing to next candidate '${candidates[candidates.indexOf(modelCandidate) + 1]}'...`);
+            continue;
+          }
+          break;
         }
+      } else {
+        // Non-streaming
+        try {
+          const response = await axios({
+            method: 'post',
+            url: `${baseUrl}/chat/completions`,
+            data: payload,
+            headers,
+            timeout: 60000
+          });
 
-        db.logUsage({
-          keyId,
-          keyName,
-          model: requestedModel,
-          promptTokens: 0,
-          completionTokens: 0,
-          totalTokens: 0,
-          latencyMs: Date.now() - startTime,
-          status: 'error'
-        });
+          const latencyMs = Date.now() - startTime;
+          const usage = response.data.usage || {
+            prompt_tokens: Math.ceil(JSON.stringify(reqBody.messages).length / 4),
+            completion_tokens: Math.ceil(JSON.stringify(response.data.choices?.[0]?.message || '').length / 4),
+            total_tokens: 0
+          };
+          usage.total_tokens = (usage.prompt_tokens || 0) + (usage.completion_tokens || 0);
 
-        return Response.json({
-          error: {
-            message: errorMsg,
-            type: status === 429 ? 'rate_limit_exceeded' : 'upstream_error',
-            code: status
+          db.logUsage({
+            keyId,
+            keyName,
+            model: `opencode/${modelCandidate}`,
+            promptTokens: usage.prompt_tokens,
+            completionTokens: usage.completion_tokens,
+            totalTokens: usage.total_tokens,
+            latencyMs,
+            status: 'success'
+          });
+
+          return Response.json(response.data);
+        } catch (err: any) {
+          const status = err?.response?.status || 500;
+          lastError = err;
+
+          if (status === 429 && candidates.indexOf(modelCandidate) < candidates.length - 1) {
+            console.warn(`[Loreder Smart Router] '${modelCandidate}' rate limited. Trying next fallback candidate...`);
+            continue;
           }
-        }, { status });
-      }
-    } else {
-      // Non-streaming response
-      try {
-        const response = await axios({
-          method: 'post',
-          url: `${baseUrl}/chat/completions`,
-          data: payload,
-          headers,
-          timeout: 60000
-        });
-
-        const latencyMs = Date.now() - startTime;
-        const usage = response.data.usage || {
-          prompt_tokens: Math.ceil(JSON.stringify(reqBody.messages).length / 4),
-          completion_tokens: Math.ceil(JSON.stringify(response.data.choices?.[0]?.message || '').length / 4),
-          total_tokens: 0
-        };
-        usage.total_tokens = (usage.prompt_tokens || 0) + (usage.completion_tokens || 0);
-
-        db.logUsage({
-          keyId,
-          keyName,
-          model: requestedModel,
-          promptTokens: usage.prompt_tokens,
-          completionTokens: usage.completion_tokens,
-          totalTokens: usage.total_tokens,
-          latencyMs,
-          status: 'success'
-        });
-
-        return Response.json(response.data);
-      } catch (err: any) {
-        const status = err?.response?.status || 500;
-        const errorData = err?.response?.data;
-        let errorMsg = errorData?.error?.message || err.message || 'Upstream connection error';
-
-        if (status === 429) {
-          errorMsg = `OpenCode Zen Rate Limit: The requested model '${targetModel}' is currently rate limited. Please try again in 15-30 seconds.`;
+          break;
         }
-
-        db.logUsage({
-          keyId,
-          keyName,
-          model: requestedModel,
-          promptTokens: 0,
-          completionTokens: 0,
-          totalTokens: 0,
-          latencyMs: Date.now() - startTime,
-          status: 'error'
-        });
-
-        return Response.json({
-          error: {
-            message: errorMsg,
-            type: status === 429 ? 'rate_limit_exceeded' : 'upstream_error',
-            code: status
-          }
-        }, { status });
       }
     }
+
+    // Exhausted all options
+    const status = lastError?.response?.status || 429;
+    const rawMsg = lastError?.response?.data?.error?.message || lastError?.message || 'OpenCode Zen rate limit reached';
+
+    db.logUsage({
+      keyId,
+      keyName,
+      model: requestedModel,
+      promptTokens: 0,
+      completionTokens: 0,
+      totalTokens: 0,
+      latencyMs: Date.now() - startTime,
+      status: 'error'
+    });
+
+    return Response.json({
+      error: {
+        message: `[OpenCode Zen Busy] ${rawMsg}. OpenCode Zen free tier servers are experiencing high traffic. Please try again in 15-30 seconds.`,
+        type: 'rate_limit_exceeded',
+        code: status
+      }
+    }, { status });
   }
 }
 
