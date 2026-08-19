@@ -7,6 +7,9 @@ import { Zap, Mail, Lock, ArrowRight, Check } from 'lucide-react';
 export default function LoginPage() {
   const searchParams = useSearchParams();
   const callbackUrl = searchParams.get('callback') || '/';
+  const editorName = callbackUrl.startsWith('http') ? 'redirect'
+    : callbackUrl === 'close' ? 'App'
+    : (callbackUrl.split(':')[0] || 'Editor') + ' Extension';
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -79,7 +82,7 @@ export default function LoginPage() {
         <p className="text-xs text-zinc-400 font-mono">Sign in to continue</p>
         {callbackUrl && callbackUrl !== '/' && (
           <p className="text-[11px] text-teal-400 bg-teal-500/10 border border-teal-500/20 px-3 py-1 rounded-full">
-          Authenticating for {callbackUrl.startsWith('http') ? 'redirect' : callbackUrl === 'close' ? 'App' : callbackUrl.replace(/://.*/, '') + ' Extension'}
+          Authenticating for {editorName}
           </p>
         )}
       </div>
