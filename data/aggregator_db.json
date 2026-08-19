@@ -1,16 +1,83 @@
 {
+  "user": {
+    "id": "usr_zaisuf",
+    "name": "Zaisuf",
+    "email": "zaisuf@loreder.ai",
+    "avatar": "https://api.dicebear.com/7.x/bottts/svg?seed=Zaisuf",
+    "role": "Administrator & Provider Host",
+    "bio": "Building Loreder AI service & OpenCode Zen gateway",
+    "createdAt": "2026-08-19T07:31:19.645Z",
+    "apiKey": "sk-loreder-master-key-zaisuf"
+  },
   "keys": [
     {
       "id": "8ffcdb3d-4405-4ab1-b1d4-52b143359181",
       "key": "sk-loreder-f1e588974cb74b8d8030d920",
       "name": "Default Master Key",
       "createdAt": "2026-08-19T05:40:21.988Z",
-      "totalRequests": 12,
-      "totalTokens": 104724,
+      "totalRequests": 16,
+      "totalTokens": 186648,
+      "status": "active"
+    },
+    {
+      "id": "65d5411b-cae6-4b6e-85d4-e89b43b255f5",
+      "key": "sk-loreder-ff182ff1864d4ed2907544a7",
+      "name": "Auth Session Token",
+      "createdAt": "2026-08-19T07:39:03.183Z",
+      "totalRequests": 0,
+      "totalTokens": 0,
       "status": "active"
     }
   ],
   "logs": [
+    {
+      "keyId": "8ffcdb3d-4405-4ab1-b1d4-52b143359181",
+      "keyName": "Default Master Key",
+      "model": "opencode/laguna-s-2.1-free",
+      "promptTokens": 0,
+      "completionTokens": 0,
+      "totalTokens": 0,
+      "latencyMs": 1653,
+      "status": "error",
+      "id": "7a017610-512b-482f-9694-91652bbbe498",
+      "timestamp": "2026-08-19T11:39:30.308Z"
+    },
+    {
+      "keyId": "8ffcdb3d-4405-4ab1-b1d4-52b143359181",
+      "keyName": "Default Master Key",
+      "model": "opencode/nemotron-3.5-lightning-free",
+      "promptTokens": 104,
+      "completionTokens": 52159,
+      "totalTokens": 52263,
+      "latencyMs": 8341,
+      "status": "success",
+      "id": "ded49099-c358-479b-a320-f69d9ec2a738",
+      "timestamp": "2026-08-19T06:45:59.215Z"
+    },
+    {
+      "keyId": "8ffcdb3d-4405-4ab1-b1d4-52b143359181",
+      "keyName": "Default Master Key",
+      "model": "opencode/hy3-free",
+      "promptTokens": 77,
+      "completionTokens": 5278,
+      "totalTokens": 5355,
+      "latencyMs": 4774,
+      "status": "success",
+      "id": "ec48d1e2-02c4-4891-9dec-b0649005a3bb",
+      "timestamp": "2026-08-19T06:45:39.728Z"
+    },
+    {
+      "keyId": "8ffcdb3d-4405-4ab1-b1d4-52b143359181",
+      "keyName": "Default Master Key",
+      "model": "opencode/nemotron-3.5-lightning-free",
+      "promptTokens": 37,
+      "completionTokens": 24269,
+      "totalTokens": 24306,
+      "latencyMs": 8242,
+      "status": "success",
+      "id": "a7be4037-f37b-48d7-abda-1071576f15a7",
+      "timestamp": "2026-08-19T06:44:53.684Z"
+    },
     {
       "keyId": "8ffcdb3d-4405-4ab1-b1d4-52b143359181",
       "keyName": "Default Master Key",

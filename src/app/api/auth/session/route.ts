@@ -14,7 +14,7 @@ export async function GET(req: NextRequest) {
       return Response.json({ error: 'Invalid or expired token' }, { status: 401 });
     }
 
-    const user = await db.getUser();
+    const user = await db.getUser(key.userId);
     return Response.json({
       authenticated: true,
       user: {
@@ -23,6 +23,8 @@ export async function GET(req: NextRequest) {
         email: user.email,
         role: user.role,
         bio: user.bio,
+        image: user.avatar,
+        avatar: user.avatar,
         apiKey: token,
       }
     });

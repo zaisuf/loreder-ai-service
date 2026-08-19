@@ -16,6 +16,7 @@ export interface UserProfile {
 
 export interface ApiKey {
   id: string;
+  userId?: string;
   key: string;
   name: string;
   createdAt: string;
@@ -105,12 +106,16 @@ class DatabaseService {
   }
 
   // Users
-  public async getUser(email?: string): Promise<UserProfile> {
+  public async getUser(identifier?: string): Promise<UserProfile> {
     await this.init();
     let userRecord = null;
-    if (email) {
-      const [u] = await db.select().from(schema.users).where(eq(schema.users.email, email)).limit(1);
-      userRecord = u;
+    if (identifier) {
+      const [uByEmail] = await db.select().from(schema.users).where(eq(schema.users.email, identifier)).limit(1);
+      userRecord = uByEmail;
+      if (!userRecord) {
+        const [uById] = await db.select().from(schema.users).where(eq(schema.users.id, identifier)).limit(1);
+        userRecord = uById;
+      }
     }
     if (!userRecord) {
       const [u] = await db.select().from(schema.users).limit(1);
@@ -206,6 +211,7 @@ class DatabaseService {
 
     return {
       id: row.id,
+      userId: row.userId || undefined,
       key: row.key,
       name: row.name,
       createdAt: row.createdAt?.toISOString() || new Date().toISOString(),
