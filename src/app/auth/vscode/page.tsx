@@ -126,10 +126,10 @@ export default function VSCodeAuthPage() {
               </label>
               <div className="flex items-center bg-[#18181b] border border-zinc-800 rounded-xl overflow-hidden">
                 <span className="flex-1 px-3 py-2.5 text-[11px] font-mono text-teal-300 truncate">
-                  {data?.endpoint || 'http://localhost:3000/v1'}
+                  {data?.endpoint || 'https://www.shereflow.site/v1'}
                 </span>
                 <button
-                  onClick={() => copy(data?.endpoint || 'http://localhost:3000/v1', setCopiedUrl)}
+                  onClick={() => copy(data?.endpoint || 'https://www.shereflow.site/v1', setCopiedUrl)}
                   className="px-3 py-2.5 border-l border-zinc-800 text-zinc-500 hover:text-teal-400 transition-colors"
                 >
                   {copiedUrl ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
@@ -168,7 +168,7 @@ export default function VSCodeAuthPage() {
             <ol className="list-decimal list-inside text-zinc-400 space-y-1">
               <li>Open Settings → AI / Provider</li>
               <li>Set Provider to <span className="text-teal-400 font-mono">OpenAI</span></li>
-              <li>Set Base URL to <span className="text-teal-400 font-mono">http://localhost:3000/v1</span></li>
+              <li>Set Base URL to <span className="text-teal-400 font-mono">https://www.shereflow.site/v1</span></li>
               <li>Paste your API token above into the API Key field</li>
               <li>Pick any model like <span className="text-teal-400 font-mono">opencode/deepseek-v4-flash-free</span></li>
             </ol>

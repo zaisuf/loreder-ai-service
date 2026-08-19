@@ -13,7 +13,7 @@ export const Docs: React.FC = () => {
       code: `from openai import OpenAI
 
 client = OpenAI(
-    base_url="http://localhost:3000/v1",
+    base_url="https://www.shereflow.site/v1",
     api_key="YOUR_LOREDER_API_KEY" # sk-loreder-...
 )
 
@@ -35,7 +35,7 @@ for chunk in response:
       code: `import OpenAI from 'openai';
 
 const openai = new OpenAI({
-  baseURL: 'http://localhost:3000/v1',
+  baseURL: 'https://www.shereflow.site/v1',
   apiKey: 'YOUR_LOREDER_API_KEY', // sk-loreder-...
 });
 
@@ -56,7 +56,7 @@ main();`
     {
       title: 'cURL Command',
       language: 'bash',
-      code: `curl -X POST http://localhost:3000/v1/chat/completions \\
+      code: `curl -X POST https://www.shereflow.site/v1/chat/completions \\
   -H "Authorization: Bearer YOUR_LOREDER_API_KEY" \\
   -H "Content-Type: application/json" \\
   -d '{
@@ -69,7 +69,7 @@ main();`
       title: 'Cursor / VS Code Configuration',
       language: 'json',
       code: `// Settings for Cursor IDE or OpenCode Extension:
-// Base URL: http://localhost:3000/v1
+// Base URL: https://www.shereflow.site/v1
 // API Key: sk-loreder-your-key
 // Primary Model: opencode/deepseek-v4-flash-free`
     }

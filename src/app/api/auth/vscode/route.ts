@@ -8,12 +8,12 @@ export async function POST(req: NextRequest) {
   // Create or retrieve key for extension
   const newKey = await db.createKey(`VS Code Auth (${extensionName})`);
   
-  const deepLinkUri = `vscode://zaisuf.loreder-ai-service/auth?token=${newKey.key}&endpoint=${encodeURIComponent('http://localhost:3000/v1')}`;
+  const deepLinkUri = `vscode://zaisuf.loreder-ai-service/auth?token=${newKey.key}&endpoint=${encodeURIComponent('https://www.shereflow.site/v1')}`;
 
   return Response.json({
     success: true,
     token: newKey.key,
-    endpoint: 'http://localhost:3000/v1',
+    endpoint: 'https://www.shereflow.site/v1',
     deepLinkUri,
     user: await db.getUser()
   });

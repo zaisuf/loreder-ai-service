@@ -20,7 +20,7 @@ export default function Home() {
   const [copiedBaseUrl, setCopiedBaseUrl] = useState(false);
 
   const handleCopyBaseUrl = () => {
-    navigator.clipboard.writeText('http://localhost:3000/v1');
+    navigator.clipboard.writeText('https://www.shereflow.site/v1');
     setCopiedBaseUrl(true);
     setTimeout(() => setCopiedBaseUrl(false), 2000);
   };
@@ -82,7 +82,7 @@ export default function Home() {
           <button
             onClick={handleCopyBaseUrl}
             className="w-8 h-8 rounded-lg bg-zinc-900 border border-zinc-800 text-zinc-400 hover:text-teal-400 flex items-center justify-center transition-colors"
-            title="Copy OpenAI Base URL: http://localhost:3000/v1"
+            title="Copy OpenAI Base URL: https://www.shereflow.site/v1"
           >
             {copiedBaseUrl ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
           </button>
@@ -119,7 +119,7 @@ export default function Home() {
           <div className="flex items-center space-x-4">
             <div className="flex items-center space-x-2 text-xs text-zinc-400">
               <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-              <span className="font-mono text-zinc-300">http://localhost:3000/v1</span>
+              <span className="font-mono text-zinc-300">https://www.shereflow.site/v1</span>
             </div>
           </div>
         </header>
