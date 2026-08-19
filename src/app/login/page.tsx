@@ -16,6 +16,8 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
+  const [authToken, setAuthToken] = useState('');
+  const [authUser, setAuthUser] = useState<{email?: string} | null>(null);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -40,30 +42,28 @@ export default function LoginPage() {
       // Store token in localStorage
       localStorage.setItem('loreder:token', data.token);
       localStorage.setItem('loreder:user', JSON.stringify(data.user));
+      setAuthToken(data.token);
+      setAuthUser(data.user);
       setSuccess(true);
 
-      // Redirect with token in URL so app-1/extension can read it
-      setTimeout(() => {
-        // Detect any custom URI scheme (vscode://, cursor://, windsurf://, codilore://, etc.)
-        const isCustomScheme = /^[a-z][a-z0-9+\-.]*:\/\//i.test(callbackUrl) && !callbackUrl.startsWith('http');
-        const isHttpUrl = callbackUrl.startsWith('http');
-
-        if (isHttpUrl || isCustomScheme) {
-          // Append token to the callback URL
-          const separator = callbackUrl.includes('?') ? '&' : '?';
-          window.location.href = `${callbackUrl}${separator}token=${encodeURIComponent(data.token)}`;
-        } else if (callbackUrl === 'close') {
-          // For embedded webview - post message to parent
-          window.parent?.postMessage({ type: 'LOREDER_AUTH_SUCCESS', token: data.token, user: data.user }, '*');
-          window.opener?.postMessage({ type: 'LOREDER_AUTH_SUCCESS', token: data.token, user: data.user }, '*');
-          window.close();
-        } else {
-          window.location.href = callbackUrl;
-        }
-      }, 800);
+      // Try auto-redirect immediately (works in some browsers for custom schemes)
+      const isCustomScheme = /^[a-z][a-z0-9+\-.]*:\/\//i.test(callbackUrl) && !callbackUrl.startsWith('http');
+      const isHttpUrl = callbackUrl.startsWith('http');
+      if (isHttpUrl || isCustomScheme) {
+        const separator = callbackUrl.includes('?') ? '&' : '?';
+        const finalUrl = `${callbackUrl}${separator}token=${encodeURIComponent(data.token)}`;
+        // Try immediately (user action context - best chance of working)
+        try { window.location.href = finalUrl; } catch {}
+        // Also try after a short delay as fallback
+        setTimeout(() => { try { window.location.href = finalUrl; } catch {} }, 500);
+      } else if (callbackUrl === 'close') {
+        window.parent?.postMessage({ type: 'LOREDER_AUTH_SUCCESS', token: data.token, user: data.user }, '*');
+        window.opener?.postMessage({ type: 'LOREDER_AUTH_SUCCESS', token: data.token, user: data.user }, '*');
+        setTimeout(() => window.close(), 500);
+      }
 
     } catch (err) {
-      setError('Connection error. Make sure Loreder AI is running.');
+      setError('Connection error. Make sure Codilore is running.');
       setLoading(false);
     }
   };
@@ -78,7 +78,7 @@ export default function LoginPage() {
             <Zap className="w-6 h-6 text-teal-400" />
           </div>
         </div>
-        <h1 className="text-xl font-extrabold text-white tracking-tight">Loreder AI</h1>
+        <h1 className="text-xl font-extrabold text-white tracking-tight">Codilore</h1>
         <p className="text-xs text-zinc-400 font-mono">Sign in to continue</p>
         {callbackUrl && callbackUrl !== '/' && (
           <p className="text-[11px] text-teal-400 bg-teal-500/10 border border-teal-500/20 px-3 py-1 rounded-full">
@@ -91,12 +91,25 @@ export default function LoginPage() {
       <div className="w-full max-w-md bg-[#121215] border border-zinc-800/80 rounded-2xl p-6 shadow-2xl space-y-5">
 
         {success ? (
-          <div className="text-center py-6 space-y-3">
+          <div className="text-center py-6 space-y-4">
             <div className="w-14 h-14 rounded-full bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center mx-auto">
               <Check className="w-7 h-7 text-emerald-400" />
             </div>
-            <h2 className="text-sm font-bold text-white">Signed In Successfully!</h2>
-            <p className="text-xs text-zinc-400">Redirecting you back...</p>
+            <div>
+              <h2 className="text-sm font-bold text-white">Signed In Successfully!</h2>
+              {authUser?.email && <p className="text-xs text-zinc-400 mt-1">{authUser.email}</p>}
+            </div>
+            {(callbackUrl.includes('://') && !callbackUrl.startsWith('http')) && (
+              <div className="space-y-2">
+                <a
+                  href={`${callbackUrl}${callbackUrl.includes('?') ? '&' : '?'}token=${encodeURIComponent(authToken)}`}
+                  className="block w-full bg-teal-500 hover:bg-teal-400 text-zinc-950 font-bold py-2.5 rounded-xl text-xs text-center transition-all shadow-lg shadow-teal-500/20"
+                >
+                  ↩ Return to {editorName}
+                </a>
+                <p className="text-[10px] text-zinc-500">If the editor didn&apos;t open automatically, click the button above.</p>
+              </div>
+            )}
           </div>
         ) : (
           <form onSubmit={handleLogin} className="space-y-4 text-xs">
@@ -150,7 +163,7 @@ export default function LoginPage() {
         )}
 
         <div className="pt-2 border-t border-zinc-800/80 text-center text-[11px] text-zinc-500">
-          Loreder AI — Local AI Aggregator Service
+          Codilore — Local AI Aggregator Service
         </div>
       </div>
 

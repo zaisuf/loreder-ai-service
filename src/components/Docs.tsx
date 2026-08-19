@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Terminal, Copy, Check, Code, Cpu } from 'lucide-react';
+import { Terminal, Copy, Check, Code } from 'lucide-react';
 
 export const Docs: React.FC = () => {
   const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
@@ -18,7 +18,7 @@ client = OpenAI(
 )
 
 response = client.chat.completions.create(
-    model="opencode/free-model",
+    model="opencode/deepseek-v4-flash-free",
     messages=[
         {"role": "user", "content": "Explain quantum computing in 2 sentences."}
     ],
@@ -41,7 +41,7 @@ const openai = new OpenAI({
 
 async function main() {
   const stream = await openai.chat.completions.create({
-    model: 'opencode/deepseek-r1-free',
+    model: 'opencode/deepseek-v4-flash-free',
     messages: [{ role: 'user', content: 'Write a quicksort in TypeScript.' }],
     stream: true,
   });
@@ -60,22 +60,18 @@ main();`
   -H "Authorization: Bearer YOUR_LOREDER_API_KEY" \\
   -H "Content-Type: application/json" \\
   -d '{
-    "model": "opencode/free-model",
+    "model": "opencode/deepseek-v4-flash-free",
     "messages": [{"role": "user", "content": "Hello from OpenCode Zen!"}],
     "stream": false
   }'`
     },
     {
-      title: 'Cursor / VS Code Extension Setup',
+      title: 'Cursor / VS Code Configuration',
       language: 'json',
-      code: `// Settings for Cursor or OpenCode Extension:
-// Override Base URL: http://localhost:3000/v1
-// API Key: sk-loreder-your-generated-key
-// Available Models:
-// - opencode/free-model
-// - opencode/deepseek-r1-free
-// - opencode/deepseek-v3-free
-// - opencode/qwen-2.5-coder-free`
+      code: `// Settings for Cursor IDE or OpenCode Extension:
+// Base URL: http://localhost:3000/v1
+// API Key: sk-loreder-your-key
+// Primary Model: opencode/deepseek-v4-flash-free`
     }
   ];
 
@@ -86,43 +82,43 @@ main();`
   };
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h3 className="text-xl font-extrabold text-white flex items-center">
-          <Terminal className="w-5 h-5 mr-2 text-teal-400" />
-          Developer Quickstart & SDK Docs
+    <div className="space-y-6 max-w-7xl mx-auto">
+      <div className="border-b border-zinc-800/80 pb-4">
+        <h3 className="text-base font-extrabold text-white flex items-center">
+          <Terminal className="w-4 h-4 mr-2 text-teal-400" />
+          Developer SDK Integration Quickstart
         </h3>
-        <p className="text-xs text-slate-400 mt-1">
-          Connect standard OpenAI client SDKs, AI IDE extensions, and cURL requests to your local aggregator service.
+        <p className="text-xs text-zinc-400 mt-1">
+          Connect OpenAI client SDKs, Cursor, and cURL requests directly to your aggregator instance.
         </p>
       </div>
 
-      <div className="space-y-6">
+      <div className="space-y-4">
         {snippets.map((snip, idx) => (
-          <div key={idx} className="glass-card rounded-2xl border border-slate-800 overflow-hidden">
-            <div className="px-5 py-3.5 bg-slate-900/80 border-b border-slate-800 flex justify-between items-center">
-              <span className="text-xs font-bold text-slate-200 flex items-center">
+          <div key={idx} className="bg-[#121215] rounded-2xl border border-zinc-800/80 overflow-hidden">
+            <div className="px-4 py-3 bg-[#18181b] border-b border-zinc-800 flex justify-between items-center">
+              <span className="text-xs font-bold text-zinc-200 flex items-center">
                 <Code className="w-3.5 h-3.5 mr-2 text-teal-400" />
                 {snip.title}
               </span>
               <button
                 onClick={() => handleCopy(snip.code, idx)}
-                className="flex items-center space-x-1.5 text-xs text-slate-400 hover:text-teal-400 bg-slate-800 hover:bg-slate-700 px-3 py-1.5 rounded-lg transition-colors font-medium"
+                className="flex items-center space-x-1 text-[11px] text-zinc-400 hover:text-teal-400 bg-zinc-800 hover:bg-zinc-700 px-2.5 py-1 rounded-lg transition-colors"
               >
                 {copiedIndex === idx ? (
                   <>
-                    <Check className="w-3.5 h-3.5 text-emerald-400" />
-                    <span className="text-emerald-400">Copied!</span>
+                    <Check className="w-3 h-3 text-emerald-400" />
+                    <span className="text-emerald-400 font-semibold">Copied!</span>
                   </>
                 ) : (
                   <>
-                    <Copy className="w-3.5 h-3.5" />
+                    <Copy className="w-3 h-3" />
                     <span>Copy Code</span>
                   </>
                 )}
               </button>
             </div>
-            <div className="p-5 bg-slate-950/90 overflow-x-auto">
+            <div className="p-4 bg-[#09090b] overflow-x-auto">
               <pre className="text-xs font-mono text-teal-300/90 leading-relaxed">
                 {snip.code}
               </pre>

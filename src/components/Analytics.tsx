@@ -52,79 +52,79 @@ export const Analytics: React.FC = () => {
 
   if (loading && !data) {
     return (
-      <div className="flex items-center justify-center h-64 text-slate-400">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-teal-500 mr-3"></div>
-        Loading metrics...
+      <div className="flex items-center justify-center h-64 text-zinc-400 text-xs">
+        <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-teal-500 mr-3"></div>
+        Loading obsidian metrics...
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
-      {/* Top Stat Cards */}
+    <div className="space-y-6 max-w-7xl mx-auto">
+      {/* Top KPI Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="glass-card p-5 rounded-2xl border border-slate-800">
+        <div className="bg-[#121215] p-5 rounded-2xl border border-zinc-800/80">
           <div className="flex items-center justify-between">
-            <span className="text-sm font-medium text-slate-400">Total Requests</span>
-            <div className="p-2.5 rounded-xl bg-teal-500/10 text-teal-400 border border-teal-500/20">
-              <Activity className="w-5 h-5" />
+            <span className="text-xs font-medium text-zinc-400">Total Requests</span>
+            <div className="p-2 rounded-xl bg-teal-500/10 text-teal-400 border border-teal-500/20">
+              <Activity className="w-4 h-4" />
             </div>
           </div>
           <div className="mt-4">
             <h3 className="text-3xl font-extrabold text-white tracking-tight">{data?.totalRequests.toLocaleString() || 0}</h3>
-            <p className="text-xs text-teal-400 mt-1 font-medium flex items-center">
+            <p className="text-[11px] text-teal-400 mt-1 font-mono flex items-center">
               <span className="w-1.5 h-1.5 rounded-full bg-teal-400 mr-1.5 animate-pulse"></span>
-              Live tracking
+              Live telemetry
             </p>
           </div>
         </div>
 
-        <div className="glass-card p-5 rounded-2xl border border-slate-800">
+        <div className="bg-[#121215] p-5 rounded-2xl border border-zinc-800/80">
           <div className="flex items-center justify-between">
-            <span className="text-sm font-medium text-slate-400">Total Tokens</span>
-            <div className="p-2.5 rounded-xl bg-sky-500/10 text-sky-400 border border-sky-500/20">
-              <Zap className="w-5 h-5" />
+            <span className="text-xs font-medium text-zinc-400">Total Tokens</span>
+            <div className="p-2 rounded-xl bg-sky-500/10 text-sky-400 border border-sky-500/20">
+              <Zap className="w-4 h-4" />
             </div>
           </div>
           <div className="mt-4">
             <h3 className="text-3xl font-extrabold text-white tracking-tight">{data?.totalTokens.toLocaleString() || 0}</h3>
-            <p className="text-xs text-sky-400 mt-1 font-medium">Prompt + Completion</p>
+            <p className="text-[11px] text-sky-400 mt-1 font-mono">Prompt + Completion</p>
           </div>
         </div>
 
-        <div className="glass-card p-5 rounded-2xl border border-slate-800">
+        <div className="bg-[#121215] p-5 rounded-2xl border border-zinc-800/80">
           <div className="flex items-center justify-between">
-            <span className="text-sm font-medium text-slate-400">Avg Latency</span>
-            <div className="p-2.5 rounded-xl bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">
-              <Clock className="w-5 h-5" />
+            <span className="text-xs font-medium text-zinc-400">Avg Latency</span>
+            <div className="p-2 rounded-xl bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">
+              <Clock className="w-4 h-4" />
             </div>
           </div>
           <div className="mt-4">
-            <h3 className="text-3xl font-extrabold text-white tracking-tight">{data?.avgLatency || 0} <span className="text-lg font-normal text-slate-400">ms</span></h3>
-            <p className="text-xs text-indigo-400 mt-1 font-medium">OpenCode Zen Response</p>
+            <h3 className="text-3xl font-extrabold text-white tracking-tight">{data?.avgLatency || 0} <span className="text-sm font-normal text-zinc-400">ms</span></h3>
+            <p className="text-[11px] text-indigo-400 mt-1 font-mono">OpenCode Zen Response</p>
           </div>
         </div>
 
-        <div className="glass-card p-5 rounded-2xl border border-slate-800">
+        <div className="bg-[#121215] p-5 rounded-2xl border border-zinc-800/80">
           <div className="flex items-center justify-between">
-            <span className="text-sm font-medium text-slate-400">Active Models / Keys</span>
-            <div className="p-2.5 rounded-xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-              <Cpu className="w-5 h-5" />
+            <span className="text-xs font-medium text-zinc-400">Active Models / Keys</span>
+            <div className="p-2 rounded-xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+              <Cpu className="w-4 h-4" />
             </div>
           </div>
           <div className="mt-4">
-            <h3 className="text-3xl font-extrabold text-white tracking-tight">{data?.activeModelsCount || 0} <span className="text-lg font-normal text-slate-400">/ {data?.activeKeysCount || 0} keys</span></h3>
-            <p className="text-xs text-emerald-400 mt-1 font-medium">Free Tier Active</p>
+            <h3 className="text-3xl font-extrabold text-white tracking-tight">{data?.activeModelsCount || 0} <span className="text-sm font-normal text-zinc-400">/ {data?.activeKeysCount || 0} keys</span></h3>
+            <p className="text-[11px] text-emerald-400 mt-1 font-mono">Active Registry</p>
           </div>
         </div>
       </div>
 
-      {/* Model Distribution & Usage */}
+      {/* Model Distribution & Log Stream */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="glass-card p-6 rounded-2xl border border-slate-800 lg:col-span-1">
-          <h4 className="text-base font-bold text-white mb-4 flex items-center">
+        <div className="bg-[#121215] p-6 rounded-2xl border border-zinc-800/80 lg:col-span-1 space-y-4">
+          <h4 className="text-xs font-bold text-zinc-100 uppercase tracking-wider flex items-center">
             <Cpu className="w-4 h-4 mr-2 text-teal-400" />
-            Model Usage Breakdown
+            Model Usage Distribution
           </h4>
 
           {data?.modelStats && Object.keys(data.modelStats).length > 0 ? (
@@ -132,12 +132,12 @@ export const Analytics: React.FC = () => {
               {Object.entries(data.modelStats).map(([model, count]) => {
                 const percentage = Math.round((count / (data.totalRequests || 1)) * 100);
                 return (
-                  <div key={model} className="bg-slate-900/60 p-3 rounded-xl border border-slate-800">
+                  <div key={model} className="bg-[#18181b] p-3 rounded-xl border border-zinc-800">
                     <div className="flex justify-between text-xs font-semibold mb-1">
-                      <span className="text-slate-300 truncate max-w-[180px]">{model}</span>
-                      <span className="text-teal-400">{count} reqs ({percentage}%)</span>
+                      <span className="text-zinc-300 truncate max-w-[160px] font-mono">{model}</span>
+                      <span className="text-teal-400 font-mono">{count} reqs ({percentage}%)</span>
                     </div>
-                    <div className="w-full bg-slate-800 rounded-full h-1.5 overflow-hidden">
+                    <div className="w-full bg-zinc-800 rounded-full h-1.5 overflow-hidden">
                       <div className="bg-teal-500 h-1.5 rounded-full" style={{ width: `${percentage}%` }}></div>
                     </div>
                   </div>
@@ -145,62 +145,62 @@ export const Analytics: React.FC = () => {
               })}
             </div>
           ) : (
-            <div className="text-center py-8 text-slate-500 text-sm">
-              No request traffic logged yet. Test a model in the Playground!
+            <div className="text-center py-10 text-zinc-500 text-xs">
+              No traffic logged yet. Try sending a message in Playground!
             </div>
           )}
         </div>
 
-        {/* Live Requests Log Table */}
-        <div className="glass-card p-6 rounded-2xl border border-slate-800 lg:col-span-2">
-          <div className="flex justify-between items-center mb-4">
-            <h4 className="text-base font-bold text-white flex items-center">
+        {/* Live Logs Table */}
+        <div className="bg-[#121215] p-6 rounded-2xl border border-zinc-800/80 lg:col-span-2 space-y-4">
+          <div className="flex justify-between items-center">
+            <h4 className="text-xs font-bold text-zinc-100 uppercase tracking-wider flex items-center">
               <Activity className="w-4 h-4 mr-2 text-teal-400" />
-              Recent Request Stream
+              Live Telemetry Log Stream
             </h4>
-            <span className="text-xs text-slate-400">Auto-refreshing (4s)</span>
+            <span className="text-[10px] font-mono text-zinc-500">Auto-refresh (4s)</span>
           </div>
 
           <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs">
-              <thead className="text-slate-400 bg-slate-900/80 uppercase font-semibold border-b border-slate-800">
+            <table className="w-full text-left text-xs font-sans">
+              <thead className="text-zinc-400 bg-[#18181b] uppercase font-semibold text-[10px] border-b border-zinc-800">
                 <tr>
                   <th className="py-3 px-3">Status</th>
                   <th className="py-3 px-3">Model</th>
-                  <th className="py-3 px-3">API Key</th>
+                  <th className="py-3 px-3">Key Name</th>
                   <th className="py-3 px-3">Tokens</th>
                   <th className="py-3 px-3">Latency</th>
                   <th className="py-3 px-3 text-right">Time</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-800/60">
+              <tbody className="divide-y divide-zinc-800/50">
                 {logs.length > 0 ? (
                   logs.slice(0, 8).map((log) => (
-                    <tr key={log.id} className="hover:bg-slate-800/30 transition-colors">
+                    <tr key={log.id} className="hover:bg-zinc-800/40 transition-colors">
                       <td className="py-3 px-3">
                         {log.status === 'success' ? (
-                          <span className="inline-flex items-center text-emerald-400 font-medium">
+                          <span className="inline-flex items-center text-emerald-400 font-medium text-[11px]">
                             <CheckCircle2 className="w-3.5 h-3.5 mr-1" /> 200 OK
                           </span>
                         ) : (
-                          <span className="inline-flex items-center text-rose-400 font-medium">
+                          <span className="inline-flex items-center text-rose-400 font-medium text-[11px]">
                             <XCircle className="w-3.5 h-3.5 mr-1" /> Error
                           </span>
                         )}
                       </td>
                       <td className="py-3 px-3 font-mono text-teal-300 max-w-[140px] truncate">{log.model}</td>
-                      <td className="py-3 px-3 text-slate-300 font-medium">{log.keyName}</td>
-                      <td className="py-3 px-3 font-mono text-slate-400">{log.totalTokens}</td>
-                      <td className="py-3 px-3 font-mono text-slate-400">{log.latencyMs}ms</td>
-                      <td className="py-3 px-3 text-right text-slate-500 font-mono">
+                      <td className="py-3 px-3 text-zinc-300 font-medium">{log.keyName}</td>
+                      <td className="py-3 px-3 font-mono text-zinc-400">{log.totalTokens}</td>
+                      <td className="py-3 px-3 font-mono text-zinc-400">{log.latencyMs}ms</td>
+                      <td className="py-3 px-3 text-right text-zinc-500 font-mono text-[11px]">
                         {new Date(log.timestamp).toLocaleTimeString()}
                       </td>
                     </tr>
                   ))
                 ) : (
                   <tr>
-                    <td colSpan={6} className="text-center py-8 text-slate-500">
-                      No logs available yet.
+                    <td colSpan={6} className="text-center py-10 text-zinc-500">
+                      No logs recorded.
                     </td>
                   </tr>
                 )}

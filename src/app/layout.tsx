@@ -13,7 +13,7 @@ const plusJakarta = Plus_Jakarta_Sans({
 });
 
 export const metadata: Metadata = {
-  title: 'Loreder AI Aggregator | High Performance AI Router & Gateway',
+  title: 'Codilore Aggregator | High Performance AI Router & Gateway',
   description: 'AI Aggregator service powered by OpenCode Zen free models with OpenAI compatible API endpoints and live streaming playground.',
 };
 

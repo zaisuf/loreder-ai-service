@@ -54,7 +54,7 @@ export class OpenCodeProvider {
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
       'Accept-Encoding': 'identity',
-      'User-Agent': 'Loreder-AI-Aggregator/1.0'
+      'User-Agent': 'Codilore-Aggregator/1.0'
     };
 
     if (apiKey) {
@@ -143,7 +143,7 @@ export class OpenCodeProvider {
 
           // If rate limited (429), try next fallback free candidate
           if (status === 429 && candidates.indexOf(modelCandidate) < candidates.length - 1) {
-            console.warn(`[Loreder Smart Router] '${modelCandidate}' rate limited on OpenCode Zen. Auto-routing to next candidate '${candidates[candidates.indexOf(modelCandidate) + 1]}'...`);
+            console.warn(`[Codilore Smart Router] '${modelCandidate}' rate limited on OpenCode Zen. Auto-routing to next candidate '${candidates[candidates.indexOf(modelCandidate) + 1]}'...`);
             continue;
           }
           break;
@@ -184,7 +184,7 @@ export class OpenCodeProvider {
           lastError = err;
 
           if (status === 429 && candidates.indexOf(modelCandidate) < candidates.length - 1) {
-            console.warn(`[Loreder Smart Router] '${modelCandidate}' rate limited. Trying next fallback candidate...`);
+            console.warn(`[Codilore Smart Router] '${modelCandidate}' rate limited. Trying next fallback candidate...`);
             continue;
           }
           break;
