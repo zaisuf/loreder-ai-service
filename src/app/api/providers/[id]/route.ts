@@ -7,7 +7,7 @@ export async function PUT(
 ) {
   const { id } = await params;
   const updates = await req.json();
-  const updated = db.updateProvider(id, updates);
+  const updated = await db.updateProvider(id, updates);
   if (updated) {
     return Response.json(updated);
   }

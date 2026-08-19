@@ -1,5 +1,5 @@
 import { db } from '@/lib/db';
 
 export async function GET() {
-  return Response.json(db.getLogs(100));
+  return Response.json(await db.getLogs(100));
 }

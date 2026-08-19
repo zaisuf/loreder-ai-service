@@ -4,19 +4,21 @@ import { db } from '@/lib/db';
 // Simple credential-based login returning a user token
 export async function POST(req: NextRequest) {
   try {
-    const { email, password } = await req.json();
+    const body = await req.json().catch(() => ({}));
+    const email = body.email || '';
+    const password = body.password || '';
 
-    // Get user from db
-    const user = db.getUser();
-
-    // Simple credential check (in production use hashed passwords)
-    // For now: accept any login for the owner email, or default password
     const validEmail = email?.trim().toLowerCase();
-    const ownerEmail = user.email?.toLowerCase();
-
     if (!validEmail) {
       return Response.json({ error: 'Email required' }, { status: 400 });
     }
+
+    // Get user from db
+    const user = await db.getUser(validEmail);
+
+    // Simple credential check (in production use hashed passwords)
+    // For now: accept any login for the owner email, or default password
+    const ownerEmail = user.email?.toLowerCase();
 
     // Accept owner email OR any email if password matches default
     const isOwner = validEmail === ownerEmail;
@@ -28,10 +30,10 @@ export async function POST(req: NextRequest) {
     }
 
     // Issue a session token (use existing key or create one)
-    const keys = db.getKeys();
+    const keys = await db.getKeys(user.id);
     let sessionToken = keys.find(k => k.status === 'active' && k.name === 'Auth Session Token');
     if (!sessionToken) {
-      sessionToken = db.createKey('Auth Session Token');
+      sessionToken = await db.createKey('Auth Session Token', user.id);
     }
 
     return Response.json({

@@ -16,7 +16,7 @@ export async function POST(req: NextRequest) {
   }
 
   const token = authHeader.replace('Bearer ', '').trim();
-  const validKey = db.validateKey(token);
+  const validKey = await db.validateKey(token);
 
   if (!validKey) {
     return Response.json({

@@ -6,7 +6,7 @@ export async function POST(req: NextRequest) {
   const extensionName = body.extensionName || 'VS Code Extension';
   
   // Create or retrieve key for extension
-  const newKey = db.createKey(`VS Code Auth (${extensionName})`);
+  const newKey = await db.createKey(`VS Code Auth (${extensionName})`);
   
   const deepLinkUri = `vscode://zaisuf.loreder-ai-service/auth?token=${newKey.key}&endpoint=${encodeURIComponent('http://localhost:3000/v1')}`;
 
@@ -15,6 +15,6 @@ export async function POST(req: NextRequest) {
     token: newKey.key,
     endpoint: 'http://localhost:3000/v1',
     deepLinkUri,
-    user: db.getUser()
+    user: await db.getUser()
   });
 }

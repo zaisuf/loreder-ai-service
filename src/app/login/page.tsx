@@ -1,10 +1,11 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { Zap, Mail, Lock, ArrowRight, Check } from 'lucide-react';
+import { signIn } from 'next-auth/react';
 
-export default function LoginPage() {
+function LoginForm() {
   const searchParams = useSearchParams();
   const callbackUrl = searchParams.get('callback') || '/';
   const editorName = callbackUrl.startsWith('http') ? 'redirect'
@@ -14,10 +15,61 @@ export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
   const [authToken, setAuthToken] = useState('');
   const [authUser, setAuthUser] = useState<{email?: string} | null>(null);
+
+  const handleRedirect = (token: string, user: any) => {
+    localStorage.setItem('loreder:token', token);
+    localStorage.setItem('loreder:user', JSON.stringify(user));
+    setAuthToken(token);
+    setAuthUser(user);
+    setSuccess(true);
+
+    const isCustomScheme = /^[a-z][a-z0-9+\-.]*:\/\//i.test(callbackUrl) && !callbackUrl.startsWith('http');
+    const isHttpUrl = callbackUrl.startsWith('http');
+    if (isHttpUrl || isCustomScheme) {
+      const separator = callbackUrl.includes('?') ? '&' : '?';
+      const finalUrl = `${callbackUrl}${separator}token=${encodeURIComponent(token)}`;
+      try { window.location.href = finalUrl; } catch {}
+      setTimeout(() => { try { window.location.href = finalUrl; } catch {} }, 500);
+    } else if (callbackUrl === 'close') {
+      window.parent?.postMessage({ type: 'LOREDER_AUTH_SUCCESS', token, user }, '*');
+      window.opener?.postMessage({ type: 'LOREDER_AUTH_SUCCESS', token, user }, '*');
+      setTimeout(() => window.close(), 500);
+    }
+  };
+
+  // Check if already authenticated via NextAuth / Google
+  useEffect(() => {
+    let isMounted = true;
+    async function checkExistingAuth() {
+      try {
+        const res = await fetch('/api/auth/session');
+        if (res.ok) {
+          const data = await res.json();
+          if (isMounted && data.authenticated && data.user?.apiKey) {
+            handleRedirect(data.user.apiKey, data.user);
+          }
+        }
+      } catch {}
+    }
+    checkExistingAuth();
+    return () => { isMounted = false; };
+  }, [callbackUrl]);
+
+  const handleGoogleLogin = async () => {
+    setGoogleLoading(true);
+    setError('');
+    try {
+      await signIn('google', { callbackUrl: window.location.href });
+    } catch (err: any) {
+      setError(err?.message || 'Failed to start Google sign-in. Please ensure GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET are configured in .env.local.');
+      setGoogleLoading(false);
+    }
+  };
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -39,29 +91,7 @@ export default function LoginPage() {
         return;
       }
 
-      // Store token in localStorage
-      localStorage.setItem('loreder:token', data.token);
-      localStorage.setItem('loreder:user', JSON.stringify(data.user));
-      setAuthToken(data.token);
-      setAuthUser(data.user);
-      setSuccess(true);
-
-      // Try auto-redirect immediately (works in some browsers for custom schemes)
-      const isCustomScheme = /^[a-z][a-z0-9+\-.]*:\/\//i.test(callbackUrl) && !callbackUrl.startsWith('http');
-      const isHttpUrl = callbackUrl.startsWith('http');
-      if (isHttpUrl || isCustomScheme) {
-        const separator = callbackUrl.includes('?') ? '&' : '?';
-        const finalUrl = `${callbackUrl}${separator}token=${encodeURIComponent(data.token)}`;
-        // Try immediately (user action context - best chance of working)
-        try { window.location.href = finalUrl; } catch {}
-        // Also try after a short delay as fallback
-        setTimeout(() => { try { window.location.href = finalUrl; } catch {} }, 500);
-      } else if (callbackUrl === 'close') {
-        window.parent?.postMessage({ type: 'LOREDER_AUTH_SUCCESS', token: data.token, user: data.user }, '*');
-        window.opener?.postMessage({ type: 'LOREDER_AUTH_SUCCESS', token: data.token, user: data.user }, '*');
-        setTimeout(() => window.close(), 500);
-      }
-
+      handleRedirect(data.token, data.user);
     } catch (err) {
       setError('Connection error. Make sure Codilore is running.');
       setLoading(false);
@@ -82,7 +112,7 @@ export default function LoginPage() {
         <p className="text-xs text-zinc-400 font-mono">Sign in to continue</p>
         {callbackUrl && callbackUrl !== '/' && (
           <p className="text-[11px] text-teal-400 bg-teal-500/10 border border-teal-500/20 px-3 py-1 rounded-full">
-          Authenticating for {editorName}
+            Authenticating for {editorName}
           </p>
         )}
       </div>
@@ -112,54 +142,89 @@ export default function LoginPage() {
             )}
           </div>
         ) : (
-          <form onSubmit={handleLogin} className="space-y-4 text-xs">
+          <div className="space-y-4">
             {error && (
               <div className="bg-red-500/10 border border-red-500/20 text-red-400 p-3 rounded-xl text-center text-[11px]">
                 {error}
               </div>
             )}
 
-            <div>
-              <label className="block text-zinc-400 mb-1.5 font-medium">Email Address</label>
-              <div className="relative">
-                <Mail className="w-3.5 h-3.5 absolute left-3 top-3 text-zinc-500" />
-                <input
-                  type="email"
-                  required
-                  autoFocus
-                  placeholder="your@email.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="w-full bg-[#18181b] border border-zinc-800 rounded-xl pl-9 pr-3 py-2.5 text-zinc-200 focus:outline-none focus:border-teal-500"
-                />
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-zinc-400 mb-1.5 font-medium">Password</label>
-              <div className="relative">
-                <Lock className="w-3.5 h-3.5 absolute left-3 top-3 text-zinc-500" />
-                <input
-                  type="password"
-                  required
-                  placeholder="loreder123"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="w-full bg-[#18181b] border border-zinc-800 rounded-xl pl-9 pr-3 py-2.5 text-zinc-200 focus:outline-none focus:border-teal-500"
-                />
-              </div>
-              <p className="text-[10px] text-zinc-500 mt-1">Default password: <span className="font-mono text-zinc-400">loreder123</span></p>
-            </div>
-
+            {/* Google Sign In Button */}
             <button
-              type="submit"
-              disabled={loading}
-              className="w-full bg-teal-500 hover:bg-teal-400 disabled:opacity-60 text-zinc-950 font-bold py-2.5 rounded-xl text-xs flex items-center justify-center space-x-2 transition-all shadow-lg shadow-teal-500/20"
+              type="button"
+              onClick={handleGoogleLogin}
+              disabled={googleLoading || loading}
+              className="w-full bg-zinc-900 hover:bg-zinc-800 border border-zinc-700/80 text-zinc-100 font-medium py-2.5 rounded-xl text-xs flex items-center justify-center space-x-2.5 transition-all shadow-sm disabled:opacity-50 cursor-pointer"
             >
-              <span>{loading ? 'Signing In...' : 'Sign In'}</span>
-              <ArrowRight className="w-4 h-4" />
+              <svg className="w-4 h-4" viewBox="0 0 24 24">
+                <path
+                  fill="#EA4335"
+                  d="M12 5c1.6 0 3 .6 4.1 1.6l3.1-3.1C17.3 1.7 14.8 1 12 1 7.5 1 3.7 3.6 1.9 7.3l3.7 2.9C6.5 7.4 9 5 12 5z"
+                />
+                <path
+                  fill="#4285F4"
+                  d="M23.5 12.3c0-.8-.1-1.6-.2-2.3H12v4.5h6.5c-.3 1.5-1.1 2.8-2.4 3.7l3.7 2.9c2.2-2 3.7-5 3.7-8.8z"
+                />
+                <path
+                  fill="#FBBC05"
+                  d="M5.6 14.8c-.2-.7-.4-1.5-.4-2.3s.2-1.6.4-2.3L1.9 7.3C1.1 8.8.7 10.4.7 12s.4 3.2 1.2 4.7l3.7-2.9z"
+                />
+                <path
+                  fill="#34A853"
+                  d="M12 23c3.2 0 6-1.1 8-3l-3.7-2.9c-1.1.7-2.5 1.2-4.3 1.2-3 0-5.5-2.4-6.4-5.2L1.9 16c1.8 3.7 5.6 7 10.1 7z"
+                />
+              </svg>
+              <span>{googleLoading ? 'Connecting to Google...' : 'Continue with Google'}</span>
             </button>
-          </form>
+
+            <div className="flex items-center my-3">
+              <div className="flex-1 border-t border-zinc-800"></div>
+              <span className="px-3 text-[10px] text-zinc-500 uppercase tracking-wider font-mono">or email</span>
+              <div className="flex-1 border-t border-zinc-800"></div>
+            </div>
+
+            <form onSubmit={handleLogin} className="space-y-3.5 text-xs">
+              <div>
+                <label className="block text-zinc-400 mb-1 font-medium">Email Address</label>
+                <div className="relative">
+                  <Mail className="w-3.5 h-3.5 absolute left-3 top-3 text-zinc-500" />
+                  <input
+                    type="email"
+                    required
+                    placeholder="your@email.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="w-full bg-[#18181b] border border-zinc-800 rounded-xl pl-9 pr-3 py-2.5 text-zinc-200 focus:outline-none focus:border-teal-500"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-zinc-400 mb-1 font-medium">Password</label>
+                <div className="relative">
+                  <Lock className="w-3.5 h-3.5 absolute left-3 top-3 text-zinc-500" />
+                  <input
+                    type="password"
+                    required
+                    placeholder="loreder123"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="w-full bg-[#18181b] border border-zinc-800 rounded-xl pl-9 pr-3 py-2.5 text-zinc-200 focus:outline-none focus:border-teal-500"
+                  />
+                </div>
+                <p className="text-[10px] text-zinc-500 mt-1">Default password: <span className="font-mono text-zinc-400">loreder123</span></p>
+              </div>
+
+              <button
+                type="submit"
+                disabled={loading || googleLoading}
+                className="w-full bg-teal-500 hover:bg-teal-400 disabled:opacity-60 text-zinc-950 font-bold py-2.5 rounded-xl text-xs flex items-center justify-center space-x-2 transition-all shadow-lg shadow-teal-500/20 cursor-pointer"
+              >
+                <span>{loading ? 'Signing In...' : 'Sign In with Email'}</span>
+                <ArrowRight className="w-4 h-4" />
+              </button>
+            </form>
+          </div>
         )}
 
         <div className="pt-2 border-t border-zinc-800/80 text-center text-[11px] text-zinc-500">
@@ -168,5 +233,17 @@ export default function LoginPage() {
       </div>
 
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-[#09090b] flex items-center justify-center text-zinc-400 text-xs">
+        Loading Codilore...
+      </div>
+    }>
+      <LoginForm />
+    </Suspense>
   );
 }

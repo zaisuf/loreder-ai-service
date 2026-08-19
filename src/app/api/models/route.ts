@@ -2,7 +2,7 @@ import { NextRequest } from 'next/server';
 import { db } from '@/lib/db';
 
 export async function GET() {
-  return Response.json(db.getModels());
+  return Response.json(await db.getModels());
 }
 
 export async function POST(req: NextRequest) {
@@ -12,7 +12,7 @@ export async function POST(req: NextRequest) {
     return Response.json({ error: 'Model ID and Name are required' }, { status: 400 });
   }
 
-  const newModel = db.addModel({
+  const newModel = await db.addModel({
     id,
     name,
     provider: provider || 'Custom Provider',

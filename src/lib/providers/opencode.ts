@@ -18,8 +18,8 @@ const FREE_MODEL_FALLBACKS: Record<string, string[]> = {
 };
 
 export class OpenCodeProvider {
-  private getProviderConfig() {
-    const providers = db.getProviders();
+  private async getProviderConfig() {
+    const providers = await db.getProviders();
     return providers.find(p => p.type === 'opencode' && p.isEnabled);
   }
 
@@ -29,7 +29,7 @@ export class OpenCodeProvider {
     keyName: string
   ): Promise<Response> {
     const startTime = Date.now();
-    const config = this.getProviderConfig();
+    const config = await this.getProviderConfig();
 
     const baseUrl = config?.baseUrl || 'https://opencode.ai/zen/v1';
     const apiKey = config?.apiKey || 'sk-Q4UnEZC03k6Okr2dlJ9Jp2ax7jgwNyZYBW8IAOcGaRjxYXEeE3Dvbfh56VjhHpFx';
@@ -107,7 +107,7 @@ export class OpenCodeProvider {
                   totalTokens: estimatedPromptTokens + estimatedCompletionTokens,
                   latencyMs,
                   status: 'success'
-                });
+                }).catch(e => console.error('logUsage stream success error:', e));
               });
 
               response.data.on('error', (err: any) => {
@@ -125,7 +125,7 @@ export class OpenCodeProvider {
                   totalTokens: 0,
                   latencyMs: Date.now() - startTime,
                   status: 'error'
-                });
+                }).catch(e => console.error('logUsage stream error error:', e));
               });
             }
           });
@@ -167,7 +167,7 @@ export class OpenCodeProvider {
           };
           usage.total_tokens = (usage.prompt_tokens || 0) + (usage.completion_tokens || 0);
 
-          db.logUsage({
+          await db.logUsage({
             keyId,
             keyName,
             model: `opencode/${modelCandidate}`,
@@ -176,7 +176,7 @@ export class OpenCodeProvider {
             totalTokens: usage.total_tokens,
             latencyMs,
             status: 'success'
-          });
+          }).catch(e => console.error('logUsage error:', e));
 
           return Response.json(response.data);
         } catch (err: any) {
@@ -196,7 +196,7 @@ export class OpenCodeProvider {
     const status = lastError?.response?.status || 429;
     const rawMsg = lastError?.response?.data?.error?.message || lastError?.message || 'OpenCode Zen rate limit reached';
 
-    db.logUsage({
+    await db.logUsage({
       keyId,
       keyName,
       model: requestedModel,
@@ -205,7 +205,7 @@ export class OpenCodeProvider {
       totalTokens: 0,
       latencyMs: Date.now() - startTime,
       status: 'error'
-    });
+    }).catch(e => console.error('logUsage error:', e));
 
     return Response.json({
       error: {

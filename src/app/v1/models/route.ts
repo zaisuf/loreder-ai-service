@@ -1,7 +1,7 @@
 import { db } from '@/lib/db';
 
 export async function GET() {
-  const models = db.getModels();
+  const models = await db.getModels();
   return Response.json({
     object: 'list',
     data: models.map(m => ({
