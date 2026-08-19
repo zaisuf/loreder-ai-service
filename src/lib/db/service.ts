@@ -125,7 +125,7 @@ class DatabaseService {
     if (!userRecord) {
       // Create default user in Neon
       const id = 'usr_codilore_' + uuidv4().slice(0, 8);
-      const emailAddr = email || 'zaisuf@loreder.ai';
+      const emailAddr = identifier || 'zaisuf@loreder.ai';
       const [created] = await db.insert(schema.users).values({
         id,
         name: 'Zaisuf',
